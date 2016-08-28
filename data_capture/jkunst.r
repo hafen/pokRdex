@@ -100,6 +100,25 @@ dfcolorf <- expand.grid(color_1 = dfcolor$color, color_2 = dfcolor$color,
     data_frame(color_f = colorRampPalette(c(.$color_1, .$color_2))(n)[round(n*p)])
   })
 
+# Pkmn id with generation_id, evolves_from_species_id, evolution_chain_id and shape_id
+dfspecies <- read_csv(path("pokemon_species.csv")) %>%
+  select(id, generation_id, evolves_from_species_id, evolution_chain_id, shape_id)
+
+# Pkmn shape_id with shape
+dfshape <- read_csv(path("pokemon_shapes.csv")) %>%
+  rename(shape_id = id) %>%
+  rename(shape = identifier)
+
+# Pkmn id with abilities
+dfabilities <- read_csv(path("abilities.csv")) %>%
+  rename(ability_id = id) %>%
+  right_join(read_csv(path("pokemon_abilities.csv")), by = "ability_id") %>%
+  mutate(ranking = paste0("ability_", slot)) %>%
+  select(pokemon_id, identifier,ranking) %>%
+  spread(ranking, identifier) %>%
+  rename(ability_hidden = ability_3) %>%
+  rename(id = pokemon_id)
+  
 # THE join
 df <- dfpkmn %>% 
   left_join(dftype, by = "id") %>% 
@@ -109,7 +128,10 @@ df <- dfpkmn %>%
   left_join(dfcolorf, by =  c("color_1", "color_2")) %>% 
   left_join(dfegg, by = "species_id") %>% 
   left_join(dfimg, by = "id") %>% 
-  left_join(dficon, by = "id")
+  left_join(dficon, by = "id") %>%
+  left_join(dfspecies, by = "id") %>%
+  left_join(dfshape, by = "shape_id") %>%
+  left_join(dfabilities, by = "id")
 
 rm(dftype, dfstat, dfcolor, dfcolorf, dfegg, dfimg, dficon)
 rm(id, url_bulbapedia_list, url_icon)
