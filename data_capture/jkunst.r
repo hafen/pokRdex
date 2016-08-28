@@ -79,7 +79,7 @@ dficon <- data_frame(id, url_icon) %>%
   filter(!is.na(id)) %>% 
   distinct(id)
 
-# type with hex colour
+# type with hex colour, colour_1 is colour for first type, colour_2 is colour for secondary (if present)
 dfcolor <- map_df(na.omit(unique(c(dftype$type_1, dftype$type_2))), function(t){
   # t <- "bug"
   col <- "http://pokemon-uranium.wikia.com/wiki/Template:%s_color" %>% 
@@ -90,7 +90,7 @@ dfcolor <- map_df(na.omit(unique(c(dftype$type_1, dftype$type_2))), function(t){
   data_frame(type = t, color = paste0("#", col))
 })
 
-
+# colour_f looks to be colour ramp between primary and secondar colours to make hybrid "total type" colour
 dfcolorf <- expand.grid(color_1 = dfcolor$color, color_2 = dfcolor$color,
                         stringsAsFactors = FALSE) %>% 
   tbl_df() %>% 
@@ -123,15 +123,16 @@ dfabilities <- read_csv(path("abilities.csv")) %>%
 df <- dfpkmn %>% 
   left_join(dftype, by = "id") %>% 
   left_join(dfstat, by = "id") %>% 
+  left_join(dfabilities, by = "id") %>%
   left_join(dfcolor %>% rename(type_1 = type, color_1 = color), by = "type_1") %>% 
   left_join(dfcolor %>% rename(type_2 = type, color_2 = color), by = "type_2") %>% 
-  left_join(dfcolorf, by =  c("color_1", "color_2")) %>% 
+  left_join(dfcolorf, by =  c("color_1", "color_2")) %>%
   left_join(dfegg, by = "species_id") %>% 
   left_join(dfimg, by = "id") %>% 
   left_join(dficon, by = "id") %>%
   left_join(dfspecies, by = "id") %>%
-  left_join(dfshape, by = "shape_id") %>%
-  left_join(dfabilities, by = "id")
+  left_join(dfshape, by = "shape_id")
+  
 
 rm(dftype, dfstat, dfcolor, dfcolorf, dfegg, dfimg, dficon)
 rm(id, url_bulbapedia_list, url_icon)
